@@ -1,0 +1,87 @@
+article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {
+	display: block;
+}
+body {
+	font: 12px/18px Arial, sans-serif;
+}
+/* Begin of styles for the demo (you can remove them) */
+a.expand {
+	width: 90px;
+	display: block;
+	margin: 10px 0 0;
+}
+a.expand:hover {
+	height: 500px;
+}
+/* End of of styles for the demo */
+.wrapper {
+	width: 100%;
+	min-width: 600px;
+}
+
+
+/* Header
+-----------------------------------------------------------------------------*/
+.header {
+	height: 100px;
+    background: #FFE680;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Navi
+-----------------------------------------------------------------------------*/
+.navi {
+    background: red;
+    padding: 20px;
+}
+
+
+/* Middle
+-----------------------------------------------------------------------------*/
+.middle {
+	border-right: 250px solid #FFACAA;
+	position: relative;
+}
+.middle:after {
+	display: table;
+	clear: both;
+	content: '';
+}
+.container {
+	width: 100%;
+	float: left;
+	overflow: hidden;
+	margin-right: -100%;
+}
+.content {
+	padding: 0 20px;
+}
+
+.kanan{
+    width: 25%;
+    float: right;
+}
+
+.kiri{
+    width: 75%;
+    float: left;
+}
+/* Right Sidebar
+-----------------------------------------------------------------------------*/
+.right-sidebar {
+	float: right;
+	margin-right: -250px;
+	width: 250px;
+	position: relative;
+    background: #FFACAA;
+    padding-top: 20px;
+}
+
+
+/* Footer
+-----------------------------------------------------------------------------*/
+.footer {
+	height: 100px;
+	background: #BFF08E;
+}

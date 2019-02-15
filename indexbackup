@@ -1,0 +1,1210 @@
+<?php
+    include('session.php');
+    $nom = 5;
+    if(isset($_POST['tambah'])){
+        $nom += $_POST['nilai'];
+    }
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script><![endif]-->
+	<title>Halaman Mahasiswa</title>
+	<meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="wrapper">
+
+	<header class="header">
+        <h1>Halo Dosen</h1>
+		<h2>Halaman Mahasiswa</h2>
+	</header><!-- .header-->
+    <div class="navi">
+            <h3><?php echo 'Welcome, '.$login_session;?></h3>
+    </div>
+	<div class="middle">
+        
+		<div class="container">
+			<main class="content">
+                Info Terkini
+                <div class="news">
+                    <?php
+                        $sql = "SELECT * FROM news WHERE id_jadwal IN (select id_jadwal from subscribe where nim = (select nim from mahasiswa where id_user = '$user_id')) order by tgl_post ASC limit $nom";
+                        $result = mysqli_query($db, $sql);
+                        if(mysqli_num_rows($result) > 0){
+                            while($row = mysqli_fetch_array($result)){
+                                $sql1 = mysqli_query($db,"select nama_mk from matakuliah where kode_mk = (select kode_mk from jadwal where id_jadwal = '".$row['ID_JADWAL']."')");
+                                $result1 = mysqli_fetch_array($sql1,MYSQLI_ASSOC);
+                                $sql2 = mysqli_query($db,"select * from jadwal where id_jadwal = '".$row['ID_JADWAL']."'");
+                                $result2 = mysqli_fetch_array($sql2,MYSQLI_ASSOC);
+                                $sql3 = mysqli_query($db,"select nama from user where id_user = (select id_user from dosen where nip = '".$row['NIP']."')");
+                                $result3 = mysqli_fetch_array($sql3,MYSQLI_ASSOC);
+                                if($row['JENIS_NEWS'] == "infomasuk"){
+                                    echo 'Matakuliah: '.$result1['nama_mk'].' - '.$result2['KELAS'].'<br>';
+                                    echo 'Dosen: '.$result3['nama'].'<br>';
+                                    echo 'MASUK<br>';
+                                    echo 'Waktu Posting: '.$row['TGL_POST'].'<br>';
+                                }else{
+                                    echo 'Matakuliah: '.$result1['nama_mk'].' - '.$result2['KELAS'].'<br>';
+                                    echo 'Dosen: '.$result3['nama'].'<br>';
+                                    echo 'Jenis: '.$row['JENIS_NEWS'].'<br>';
+                                    echo 'Deskripsi: '.$row['DESKRIPSI'].'<br>';
+                                    echo 'Waktu Posting: '.$row['TGL_POST'].'<br>';
+                                }
+                            }
+                        }else{
+                            echo 'Belum ada info untuk ditampilkan<br>';
+                        }
+                    ?>
+                </div>
+                <form action="" method="post">
+                    <input type="hidden" name="nilai" value=<?php echo $nom; ?> />
+                    <input type="submit" name="tambah" value="Tampilkan info terdahulu" />
+                </form>
+            </main><!-- .content -->
+		</div><!-- .container-->
+
+		<aside class="right-sidebar">
+            <center><h1>Menu</h1></center>
+            <table>
+                <tr>
+                    <?php
+                        if($level == "dosen")
+                            echo "<td><a href='index_dosen.php'>Home</a></td>";
+                        else
+                            echo "<td><a href='index_mahasiswa.php'>Home</a></td>";
+                    ?>
+                </tr>
+                <tr>
+                    <td><a href="profile_mhs.php?id_user=<?php echo $user_id;?>">Profile</a></td>
+                </tr>
+                <tr>
+                    <td><a href="subscribe.php?id_user=<?php echo $user_id;?>">Subscribe Mata Kuliah</a></td>
+                </tr>
+                <tr>
+                    <td><a href="status_kelas.php">Status Kelas</a></td>
+                </tr>
+                <tr>
+                    <td><a href="logout.php">Logout</a></td>
+                </tr>
+            </table>
+		</aside><!-- .right-sidebar -->
+
+	</div><!-- .middle-->
+
+	<footer class="footer">
+    Halo Dosen @2018
+	</footer><!-- .footer -->
+
+</div><!-- .wrapper -->
+
+</body>
+</html>
+
+//subscribe
+<?php
+    include('session.php');
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script><![endif]-->
+	<title>Halaman Mahasiswa</title>
+	<meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="wrapper">
+
+	<header class="header">
+        <h1>Halo Dosen</h1>
+		<h2>Halaman Mahasiswa</h2>
+	</header><!-- .header-->
+    <div class="navi">
+            <h3><?php echo 'Welcome, '.$login_session;?></h3>
+    </div>
+	<div class="middle">
+        
+		<div class="container">
+			<main class="content">
+                <div class="kanan">
+                    List Dosen yang disubscribe
+                    <table border=1>
+                        <tr>
+                            <th>Nama Dosen</th>
+                            <th>Nama Mata Kuliah</th>
+                            <th>Kelas</th>
+                            <th>Hari</th>
+                            <th>Waktu</th>
+                            <th>Aksi</th>
+                        </tr>
+                        <?php
+                            $sql = "select * from subscribe where nim = (select nim from mahasiswa where id_user = '".$user_id."')";
+                            $result = mysqli_query($db, $sql);
+                            if(mysqli_num_rows($result) > 0){
+                                while($row = mysqli_fetch_array($result)){
+                                    $sql2 = mysqli_query($db,"select nama from user where id_user = (select id_user from dosen where nip = '".$row['NIP']."')");
+                                    $result2 = mysqli_fetch_array($sql2,MYSQLI_ASSOC);
+                                    $sql3 = mysqli_query($db,"select nama_mk from matakuliah where kode_mk = (select kode_mk from jadwal where id_jadwal = '".$row['ID_JADWAL']."')");
+                                    $result3 = mysqli_fetch_array($sql3,MYSQLI_ASSOC);
+                                    $sql7 = mysqli_query($db,"select kelas,waktu,hari from jadwal where id_jadwal = '".$row['ID_JADWAL']."'");
+                                    $result7 = mysqli_fetch_array($sql7,MYSQLI_ASSOC);
+                                    if($result7['hari']==2)
+                                        $hari = "Senin";
+                                    elseif($result7['hari']==3)
+                                        $hari = "Selasa";
+                                    elseif($result7['hari']==4)
+                                        $hari = "Rabu";
+                                    elseif($result7['hari']==5)
+                                        $hari = "Kamis";
+                                    elseif($result7['hari']==6)
+                                        $hari = "Jumat";
+                                    else
+                                        $hari = "Undefined";
+                                    echo '<tr>';
+                                    echo '<td>'.$result2['nama'].'</td>';
+                                    echo '<td>'.$result3['nama_mk'].'</td>';
+                                    echo '<td>'.$result7['kelas'].'</td>';
+                                    echo '<td>'.$hari.'</td>';
+                                    echo '<td>'.$result7['waktu'].'</td>';
+                                    $link = "unsub.php?id_user=".$user_id."&nip=".$row['NIP']."&id_jadwal=".$row['ID_JADWAL'];
+                                    echo "<td><a href='$link'>Unsubscribe</a></td>";
+                                    echo '</tr>';
+                                }
+                            }else{
+                                echo '<tr>';
+                                echo '<td colspan=4><center>Belum ada yang disubscribe</center></td>';
+                                echo '</tr>';
+                            }
+                        ?>
+                    </table>
+                </div>
+                <div class="kiri">
+                    List Dosen dan Matkul yang diampu
+                    <table border=1>
+                        <tr>
+                            <th>Nama Dosen</th>
+                            <th>Nama Mata Kuliah</th>
+                            <th>Kelas</th>
+                            <th>Hari</th>
+                            <th>Waktu</th>
+                            <th>Aksi</th>
+                        </tr>
+                        <?php
+                            $sql4 = "select * from jadwal where id_jadwal not in(select id_jadwal from subscribe WHERE nim = (select nim from mahasiswa where id_user = '".$user_id."'))";
+                            $result4 = mysqli_query($db, $sql4);
+                            if(mysqli_num_rows($result4) > 0){
+                                while($row = mysqli_fetch_array($result4)){
+                                    $sql5 = mysqli_query($db,"select nama from user where id_user = (select id_user from dosen where nip = '".$row['NIP']."')");
+                                    $result5 = mysqli_fetch_array($sql5,MYSQLI_ASSOC);
+                                    $sql6 = mysqli_query($db,"select nama_mk from matakuliah where kode_mk = (select kode_mk from jadwal where id_jadwal = '".$row['ID_JADWAL']."')");
+                                    $result6 = mysqli_fetch_array($sql6,MYSQLI_ASSOC);
+                                    if($row['HARI']==2)
+                                        $harii = "Senin";
+                                    elseif($row['HARI']==3)
+                                        $harii = "Selasa";
+                                    elseif($row['HARI']==4)
+                                        $harii = "Rabu";
+                                    elseif($row['HARI']==5)
+                                        $harii = "Kamis";
+                                    elseif($row['HARI']==6)
+                                        $harii = "Jumat";
+                                    else
+                                        $harii = "Undefined";
+                                    echo '<tr>';
+                                    echo '<td>'.$result5['nama'].'</td>';
+                                    echo '<td>'.$result6['nama_mk'].'</td>';
+                                    echo '<td>'.$row['KELAS'].'</td>';
+                                    echo '<td>'.$harii.'</td>';
+                                    echo '<td>'.$row['WAKTU'].'</td>';
+                                    $link = "subs.php?id_user=".$user_id."&nip=".$row['NIP']."&id_jadwal=".$row['ID_JADWAL'];
+                                    echo "<td><a href='$link'>Subscribe</a></td>";
+                                    echo '</tr>';
+                                }
+                            }else{
+                                echo '<tr>';
+                                echo '<td colspan=4><center>Data jadwal belum ada</center></td>';
+                                echo '</tr>';
+                            }
+                        ?>
+                    </table>
+                </div>
+            </main><!-- .content -->
+		</div><!-- .container-->
+
+		<aside class="right-sidebar">
+            <center><h1>Menu</h1></center>
+            <table>
+                <tr>
+                    <?php
+                        if($level == "dosen")
+                            echo "<td><a href='index_dosen.php'>Home</a></td>";
+                        else
+                            echo "<td><a href='index_mahasiswa.php'>Home</a></td>";
+                    ?>
+                </tr>
+                <tr>
+                    <td><a href="profile_mhs.php?id_user=<?php echo $user_id;?>">Profile</a></td>
+                </tr>
+                <tr>
+                    <td><a href="subscribe.php?id_user=<?php echo $user_id;?>">Subscribe Mata Kuliah</a></td>
+                </tr>
+                <tr>
+                    <td><a href="status_kelas.php">Status Kelas</a></td>
+                </tr>
+                <tr>
+                    <td><a href="logout.php">Logout</a></td>
+                </tr>
+            </table>
+		</aside><!-- .right-sidebar -->
+
+	</div><!-- .middle-->
+
+	<footer class="footer">
+		Halo Dosen @2018
+	</footer><!-- .footer -->
+
+</div><!-- .wrapper -->
+
+</body>
+</html>
+
+//status_kelas
+<?php
+    include('session.php');
+    date_default_timezone_set('Asia/Jakarta');
+    $time = date('H:i:s');
+    $cek = "18:00:00";
+    $cek2 = "23:59:59";
+    if(strtotime($time) >= strtotime($cek) && strtotime($time) <= strtotime($cek2))
+        $title = "Status Kelas Untuk Besok";
+    else
+        $title = "Status Kelas Untuk Hari Ini";
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script><![endif]-->
+	<title>Halaman Mahasiswa</title>
+	<meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="wrapper">
+
+	<header class="header">
+        <h1>Halo Dosen</h1>
+		<h2>Halaman Mahasiswa</h2>
+	</header><!-- .header-->
+    <div class="navi">
+            <h3><?php echo 'Welcome, '.$login_session;?></h3>
+    </div>
+	<div class="middle">
+        <?php echo $title; ?><br>
+		<div class="container">
+			<main class="content">
+                <table border="1">
+                    <tr>
+                        <td>WAKTU /<br> RUANGAN</td>
+                        <td>06:50-08:30</td>
+						<td>06:50-09:20</td>
+						<td>07:00-08:40</td>
+						<td>07:00-09:30</td>
+						<td>08:30-10:10</td>
+						<td>08:40-10:20</td>
+                        <td>08:30-11:00</td>
+                        <td>08:40-11:10</td>
+                        <td>09:20-11:00</td>
+                        <td>09:20-11:50</td>
+                        <td>09:30-11:10</td>
+                        <td>09:30-12:00</td>
+						<td>10:20-12:00</td>
+						<td>12:40-14:20</td>
+						<td>12:40-15:30</td>
+						<td>14:20-16:00</td>
+						<td>15:30-18:00</td>
+                    </tr>
+                    <?php
+                        $waktu = array("06:50-08:30", "06:50-09:20", "07:00-08:40", "07:00-09:30", "08:30-10:10", "08:40-10:20", "08:30-11:00", "08:40-11:10", 
+                        "09:20-11:00", "09:20-11:50", "09:30-11:10", "09:30-12:00", "10:20-12:00", "12:40-14:20", "12:40-15:30", "14:20-16:00", "15:30-18:00");
+                        $sql = "select * from ruang";
+                        $result = mysqli_query($db, $sql);
+                        while($row = mysqli_fetch_array($result)){
+                            echo '<tr>';
+                            echo '<td>'.$row['KD_RUANG'].'</td>';
+                            for($i=0; $i<17; $i++){
+                                if(strtotime($time) >= strtotime($cek) && strtotime($time) <= strtotime($cek2))
+                                    $sql2 = mysqli_query($db, "select status_kelas from jadwal where kd_ruang = '".$row['KD_RUANG']."' and waktu = '".$waktu[$i]."' and hari = DAYOFWEEK(CURDATE())+1");
+                                else
+                                    $sql2 = mysqli_query($db, "select status_kelas from jadwal where kd_ruang = '".$row['KD_RUANG']."' and waktu = '".$waktu[$i]."' and hari = DAYOFWEEK(CURDATE())");
+
+                                $result2 = mysqli_fetch_array($sql2);
+                                if($result2['status_kelas'] == 1)
+                                    echo '<td style="background-color:red; color:white;">DIPAKAI</td>';
+                                elseif($result2['status_kelas'] == 2)
+                                    echo '<td style="background-color:green; color:white;">KOSONG</td>';
+                                else
+                                    echo '<td style="background-color:black; color:white;">NO DATA</td>';
+                            }
+                            echo '</tr>';
+                        }
+                    ?>
+                </table>
+            </main><!-- .content -->
+		</div><!-- .container-->
+
+		<aside class="right-sidebar">
+            <center><h1>Menu</h1></center>
+            <table>
+                <tr>
+                    <?php
+                        if($level == "dosen")
+                            echo "<td><a href='index_dosen.php'>Home</a></td>";
+                        else
+                            echo "<td><a href='index_mahasiswa.php'>Home</a></td>";
+                    ?>
+                </tr>
+                <tr>
+                    <td><a href="profile_mhs.php?id_user=<?php echo $user_id;?>">Profile</a></td>
+                </tr>
+                <tr>
+                    <td><a href="subscribe.php?id_user=<?php echo $user_id;?>">Subscribe Mata Kuliah</a></td>
+                </tr>
+                <tr>
+                    <td><a href="status_kelas.php">Status Kelas</a></td>
+                </tr>
+                <tr>
+                    <td><a href="logout.php">Logout</a></td>
+                </tr>
+            </table>
+		</aside><!-- .right-sidebar -->
+
+	</div><!-- .middle-->
+
+	<footer class="footer">
+    Halo Dosen @2018
+	</footer><!-- .footer -->
+
+</div><!-- .wrapper -->
+
+</body>
+</html>
+
+//profile_mhs
+<?php
+    include('session.php');
+
+    if(isset($_POST['profile'])){
+        $nim = $_POST['nim'];
+        $jurusan = $_POST['jurusan'];
+        $semester = $_POST['semester'];
+        $notif = $_POST['notif_sms'];
+        $sql = "UPDATE mahasiswa SET nim='".$nim."', jurusan='".$jurusan."', semester='".$semester."', notif_sms='".$notif."' WHERE id_user='".$user_id."'";
+
+        if (mysqli_query($db, $sql)) {
+            $info = "Data berhasil diperbarui";
+        } else {
+            $infoe = "Error updating record: " . mysqli_error($db);
+        }
+    }
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script><![endif]-->
+	<title>Profile Mahasiswa</title>
+	<meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="wrapper">
+
+	<header class="header">
+        <h1>Halo Dosen</h1>
+		<h2>Halaman Mahasiswa</h2>
+	</header><!-- .header-->
+    <div class="navi">
+            <h3><?php echo 'Welcome, '.$login_session;?></h3>
+    </div>
+	<div class="middle">
+        
+		<div class="container">
+			<main class="content">
+                <center><h2>Profile Mahasiswa</h2></center>
+                <div style="color:green;">
+                    <?php
+                        if(isset($info))
+                            echo $info;
+                    ?>
+                </div>
+                <div style="color:red;">
+                    <?php
+                        if(isset($infoe))
+                            echo $infoe;
+                    ?>
+                </div>
+                <form method="post" action="">
+                    <?php
+                        $sql=mysqli_query($db,"select * from mahasiswa where id_user = '".$user_id."'");
+                        $hasil = mysqli_fetch_array($sql,MYSQLI_ASSOC);
+                    ?>
+                    <label>NIM</label><br>
+                    <input type="text" name="nim" value="<?php echo $hasil["NIM"];?>"/><br><br>
+                    <label>Jurusan</label><br>
+                    <select name = "jurusan" >
+                        <?php
+                            if($hasil["JURUSAN"]==null)
+                                echo "<option value='' selected>Pilih Jurusan</option>";
+                            else
+                                echo "<option value={$hasil["JURUSAN"]} selected>{$hasil["JURUSAN"]}</option>";
+                        ?>
+                        <option value="IF">Teknik Informatika</option>
+                        <option value="BIO">Biologi</option>
+                        <option value="FIS">Fisika</option>
+                        <option value="MAT">Matematika</option>
+                        <option value="AGRO">Agroteknologi</option>
+                        <option value="KIM">Kimia</option>
+                        <option value="TE">Teknik Elektro</option>
+                    </select><br><br>
+                    <label>Semester</label><br>
+                    <select name = "semester" >
+                        <?php
+                            if($hasil["SEMESTER"]==null)
+                                echo "<option value='' selected>Pilih Semester</option>";
+                            else
+                                echo "<option value={$hasil["SEMESTER"]} selected>{$hasil["SEMESTER"]}</option>";
+                        ?>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                    </select><br><br>
+                    <label>Notif melalui SMS</label><br>
+                    <select name = "notif_sms" >
+                        <?php
+                            if($hasil["NOTIF_SMS"]==null)
+                                echo "<option value='non-aktif' selected>Non-aktif</option>";
+                            else
+                                echo "<option value={$hasil["NOTIF_SMS"]} selected>{$hasil["NOTIF_SMS"]}</option>";
+                        ?>
+                        <option value="aktif">Aktif</option>
+                        <option value="non-aktif">Non-aktif</option>
+                    </select><br><br>
+                    <input type="submit" name="profile" value="Simpan Data"/>
+                </form>
+            </main><!-- .content -->
+		</div><!-- .container-->
+
+		<aside class="right-sidebar">
+            <center><h1>Menu</h1></center>
+            <table>
+                <tr>
+                <?php
+                        if($level == "dosen")
+                            echo "<td><a href='index_dosen.php'>Home</a></td>";
+                        else
+                            echo "<td><a href='index_mahasiswa.php'>Home</a></td>";
+                    ?>
+                </tr>
+                <tr>
+                    <td><a href="profile_mhs.php?id_user=<?php echo $user_id;?>">Profile</a></td>
+                </tr>
+                <tr>
+                    <td><a href="subscribe.php?id_user=<?php echo $user_id;?>">Subscribe Mata Kuliah</a></td>
+                </tr>
+                <tr>
+                    <td><a href="status_kelas.php">Status Kelas</a></td>
+                </tr>
+                <tr>
+                    <td><a href="logout.php">Logout</a></td>
+                </tr>
+            </table>
+		</aside><!-- .right-sidebar -->
+
+	</div><!-- .middle-->
+
+	<footer class="footer">
+    Halo Dosen @2018
+	</footer><!-- .footer -->
+
+</div><!-- .wrapper -->
+
+</body>
+</html>
+
+//index_dosen
+<?php
+    include('session.php');
+    date_default_timezone_set('Asia/Jakarta');
+    $time = date('H:i:s');
+    $cek = "18:00:00";
+    $cek2 = "23:59:59";
+    if(strtotime($time) >= strtotime($cek) && strtotime($time) <= strtotime($cek2))
+        $title = "Jadwal Mengajar Untuk Besok";
+    else
+        $title = "Jadwal Mengajar Untuk Hari Ini";
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script><![endif]-->
+	<title>Halaman Dosen</title>
+	<meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="wrapper">
+
+	<header class="header">
+        <h1>Halo Dosen</h1>
+		<h2>Halaman Dosen</h2>
+	</header><!-- .header-->
+    <div class="navi">
+            <h3><?php echo 'Welcome, '.$login_session;?></h3>
+    </div>
+	<div class="middle">
+        
+		<div class="container">
+			<main class="content">
+                <?php echo $title; ?>
+                <table border=1>
+                    <tr>
+                        <th>Matakuliah</th>
+                        <th>Ruang</th>
+                        <th>Kelas</th>
+                        <th>Waktu</th>
+                        <th>Tindakan</th>
+                    </tr>
+                <?php
+                    if(strtotime($time) >= strtotime($cek) && strtotime($time) <= strtotime($cek2))
+                        $sql = "select * from jadwal where nip = (select nip from dosen where id_user = '".$user_id."') AND hari = dayofweek(CURRENT_DATE)+1";
+                    else
+                        $sql = "select * from jadwal where nip = (select nip from dosen where id_user = '".$user_id."') AND hari = dayofweek(CURRENT_DATE)";
+
+                    $result = mysqli_query($db, $sql);
+                    if(mysqli_num_rows($result) > 0){
+                        while($row = mysqli_fetch_array($result)){
+                            $sql1 = mysqli_query($db,"select nama_mk from matakuliah where kode_mk = (select kode_mk from jadwal where id_jadwal = '".$row['ID_JADWAL']."')");
+                            $result1 = mysqli_fetch_array($sql1,MYSQLI_ASSOC);
+                            $link1 = "aksi_dosen.php?id_jadwal=".$row['ID_JADWAL']."&masuk=1";
+                            $link2 = "aksi_dosen.php?id_jadwal=".$row['ID_JADWAL'];
+                            
+                            echo '<tr>';
+                            echo "<td>".$result1['nama_mk']."</td>";
+                            echo "<td>".$row['KD_RUANG']."</td>";
+                            echo "<td>".$row['KELAS']."</td>";
+                            echo "<td>".$row['WAKTU']."</td>";
+                            echo "<td><a href='$link1'>Masuk</a> | <a href='$link2'>Tindakan Lain</a></td>";
+                            echo '</tr>';
+                        }
+                    }else{
+                        echo '<tr>';
+                        if(strtotime($time) >= strtotime($cek) && strtotime($time) <= strtotime($cek2))
+                            echo '<td colspan=5><center>Tidak ada jadwal untuk besok</center></td>';
+                        else
+                            echo '<td colspan=5><center>Tidak ada jadwal untuk hari ini</center></td>';
+                        echo '</tr>';
+                    }
+                ?>
+                </table>
+                
+            </main><!-- .content -->
+		</div><!-- .container-->
+
+		<aside class="right-sidebar">
+            <center><h1>Menu</h1></center>
+            <table>
+                <tr>
+                    <?php
+                        if($level == "dosen")
+                            echo "<td><a href='index_dosen.php'>Home</a></td>";
+                        else
+                            echo "<td><a href='index_mahasiswa.php'>Home</a></td>";
+                    ?>
+                </tr>
+                <tr>
+                    <td><a href="profile_dosen.php?id_user=<?php echo $user_id;?>">Profile</a></td>
+                </tr>
+                <tr>
+                    <td><a href="atur_jadwal.php?id_user=<?php echo $user_id;?>">Atur Jadwal Mengajar</a></td>
+                </tr>
+                <tr>
+                    <td><a href="logout.php">Logout</a></td>
+                </tr>
+            </table>
+		</aside><!-- .right-sidebar -->
+
+	</div><!-- .middle-->
+
+	<footer class="footer">
+    Halo Dosen @2018
+	</footer><!-- .footer -->
+
+</div><!-- .wrapper -->
+
+</body>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="//code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+	<script src="myjs.js"></script>
+</html>
+
+//aksi_dosen
+<?php
+	include('session.php');
+	
+	if(isset($_GET['masuk'])){
+		$sql = "insert into news (nip, id_jadwal, jenis_news, tgl_post) values ((select nip from jadwal where id_jadwal = '".$_GET['id_jadwal']."'), '".$_GET['id_jadwal']."', 'infomasuk', CURDATE())";
+		 
+		if(mysqli_query($db, $sql)){
+			header("location: index_dosen.php");
+		}
+	}else{
+		if(isset($_POST['caw'])){
+			$jenis = $_POST['jenis'];
+			$deskripsi = $_POST['deskripsi'];
+			$sql2 = "insert into news (nip, id_jadwal, jenis_news, deskripsi, tgl_post) values ((select nip from jadwal where id_jadwal = '".$_GET['id_jadwal']."'),'".$_GET['id_jadwal']."', '".$jenis."', '".$deskripsi."', CURDATE())";
+			if(mysqli_query($db, $sql2)){
+				header("location: index_dosen.php");
+			}
+		}
+		
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script><![endif]-->
+	<title>Dosen Menjawab</title>
+	<meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="wrapper">
+
+	<header class="header">
+        <h1>Halo Dosen</h1>
+		<h2>Dosen Menjawab</h2>
+	</header><!-- .header-->
+    <div class="navi">
+            <h3><?php echo 'Welcome, '.$login_session;?></h3>
+    </div>
+	<div class="middle">
+        
+		<div class="container">
+			<main class="content">
+                <center><h2>Jawaban Dosen</h2></center>
+                <div style="color:green;">
+                    <?php
+                        if(isset($info))
+                            echo $info;
+                    ?>
+                </div>
+                <div style="color:red;">
+                    <?php
+                        if(isset($infoe))
+                            echo $infoe;
+                    ?>
+                </div>
+                <form method="post" action="">
+					<label>Jenis Info</label><br>
+					<select name="jenis">
+						<option value="tugas">Tugas</option>
+						<option value="infomasuk">Masuk</option>
+						<option value="ganti">Ganti Jadwal</option>
+						<option value="libur">Libur</option>
+					</select><br>
+					<label>Deskripsi</label><br>
+					<textarea rows="10" cols="50" name="deskripsi" ></textarea><br>
+					<input type="submit" name="caw" value="JAWAB"/>
+                </form>
+            </main><!-- .content -->
+		</div><!-- .container-->
+
+		<aside class="right-sidebar">
+            <center><h1>Menu</h1></center>
+            <table>
+                <tr>
+                    <?php
+                        if($level == "dosen")
+                            echo "<td><a href='index_dosen.php'>Home</a></td>";
+                        else
+                            echo "<td><a href='index_mahasiswa.php'>Home</a></td>";
+                    ?>
+                </tr>
+                <tr>
+                    <td><a href="profile_dosen.php?id_user=<?php echo $user_id;?>">Profile</a></td>
+                </tr>
+                <tr>
+                    <td><a href="atur_jadwal.php?id_user=<?php echo $user_id;?>">Atur Jadwal Mengajar</a></td>
+                </tr>
+                <tr>
+                    <td><a href="logout.php">Logout</a></td>
+                </tr>
+            </table>
+		</aside><!-- .right-sidebar -->
+
+	</div><!-- .middle-->
+
+	<footer class="footer">
+    Halo Dosen @2018
+	</footer><!-- .footer -->
+
+</div><!-- .wrapper -->
+
+</body>
+</html>
+<?php
+	}
+?>
+
+//profile_dosen
+<?php
+    include('session.php');
+
+    if(isset($_POST['profile'])){
+        $nip = $_POST['nip'];
+        $prodi = $_POST['prodi'];
+        $sql = "UPDATE dosen SET nip='".$nip."', prodi='".$prodi."' WHERE id_user='".$user_id."'";
+
+        if (mysqli_query($db, $sql)) {
+            $info = "Data berhasil diperbarui";
+        } else {
+            $infoe = "Error updating record: " . mysqli_error($db);
+        }
+
+    }
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script><![endif]-->
+	<title>Profile Dosen</title>
+	<meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="wrapper">
+
+	<header class="header">
+        <h1>Halo Dosen</h1>
+		<h2>Halaman Dosen</h2>
+	</header><!-- .header-->
+    <div class="navi">
+            <h3><?php echo 'Welcome, '.$login_session;?></h3>
+    </div>
+	<div class="middle">
+        
+		<div class="container">
+			<main class="content">
+                <center><h2>Profile Dosen</h2></center>
+                <div style="color:green;">
+                    <?php
+                        if(isset($info))
+                            echo $info;
+                    ?>
+                </div>
+                <div style="color:red;">
+                    <?php
+                        if(isset($infoe))
+                            echo $infoe;
+                    ?>
+                </div>
+                <form method="post" action="">
+                    <?php
+                        $sql=mysqli_query($db,"select * from dosen where id_user = '".$user_id."'");
+                        $hasil = mysqli_fetch_array($sql,MYSQLI_ASSOC);
+                    ?>
+                    <label>NIP</label><br>
+                    <input type="text" name="nip" value="<?php echo $hasil["NIP"];?>"/><br><br>
+                    <label>Prodi</label><br>
+                    <select name = "prodi" >
+                        <?php
+                            if($hasil["PRODI"]==null)
+                                echo "<option value='' selected>Pilih Jurusan</option>";
+                            else
+                                echo "<option value={$hasil["PRODI"]} selected>{$hasil["PRODI"]}</option>";
+                        ?>
+                        <option value="IF">Teknik Informatika</option>
+                        <option value="BIO">Biologi</option>
+                        <option value="FIS">Fisika</option>
+                        <option value="MAT">Matematika</option>
+                        <option value="AGRO">Agroteknologi</option>
+                        <option value="KIM">Kimia</option>
+                        <option value="TE">Teknik Elektro</option>
+                    </select><br><br>
+                    <input type="submit" name="profile" value="Simpan Data"/>
+                </form>
+            </main><!-- .content -->
+		</div><!-- .container-->
+
+		<aside class="right-sidebar">
+            <center><h1>Menu</h1></center>
+            <table>
+                <tr>
+                    <?php
+                        if($level == "dosen")
+                            echo "<td><a href='index_dosen.php'>Home</a></td>";
+                        else
+                            echo "<td><a href='index_mahasiswa.php'>Home</a></td>";
+                    ?>
+                </tr>
+                <tr>
+                    <td><a href="profile_dosen.php?id_user=<?php echo $user_id;?>">Profile</a></td>
+                </tr>
+                <tr>
+                    <td><a href="atur_jadwal.php?id_user=<?php echo $user_id;?>">Atur Jadwal Mengajar</a></td>
+                </tr>
+                <tr>
+                    <td><a href="logout.php">Logout</a></td>
+                </tr>
+            </table>
+		</aside><!-- .right-sidebar -->
+
+	</div><!-- .middle-->
+
+	<footer class="footer">
+    Halo Dosen @2018
+	</footer><!-- .footer -->
+
+</div><!-- .wrapper -->
+
+</body>
+</html>
+
+//atur_jadwal
+<?php
+    include('session.php');
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script><![endif]-->
+	<title>Atur Jadwal Mengajar</title>
+	<meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="wrapper">
+
+	<header class="header">
+        <h1>Halo Dosen</h1>
+		<h2>Halaman Dosen</h2>
+	</header><!-- .header-->
+    <div class="navi">
+            <h3><?php echo 'Welcome, '.$login_session;?></h3>
+    </div>
+	<div class="middle">
+        
+		<div class="container">
+			<main class="content">
+                <center><h2>Atur Jadwal Mengajar</h2></center>
+                <table border=1>
+                    <tr>
+                        <th>Mata Kuliah</th>
+                        <th>Ruang</th>
+                        <th>Kelas</th>
+                        <th>Hari</th>
+                        <th>Waktu</th>
+                        <th>Tindakan</th>
+                    </tr>
+                <?php
+                    $sql = "select * from jadwal where nip = (select nip from dosen where id_user = '".$user_id."')";
+                    $result = mysqli_query($db, $sql);
+                    while($row = mysqli_fetch_array($result)){
+                        $sql1 = mysqli_query($db,"select nama_mk from matakuliah where kode_mk = (select kode_mk from jadwal where id_jadwal = '".$row['ID_JADWAL']."')");
+                        $result1 = mysqli_fetch_array($sql1,MYSQLI_ASSOC);
+                        $link1 = "ubah_jadwal.php?id_jadwal=".$row['ID_JADWAL'];
+                        $link2 = "hapus_jadwal.php?id_jadwal=".$row['ID_JADWAL']."&id_user=".$_GET['id_user'];
+                        if($row['HARI'] == 1)
+                            $hari = "Minggu";
+                        elseif($row['HARI'] == 2)
+                            $hari = "Senin";
+                        elseif($row['HARI'] == 3)
+                            $hari = "Selasa";
+                        elseif($row['HARI'] == 4)
+                            $hari = "Rabu";
+                        elseif($row['HARI'] == 5)
+                            $hari = "Kamis";
+                        elseif($row['HARI'] == 6)
+                            $hari = "Jumat";
+                        else
+                            $hari = "Sabtu";
+                        echo '<tr>';
+                        echo "<td>".$result1['nama_mk']."</td>";
+                        echo "<td>".$row['KD_RUANG']."</td>";
+                        echo "<td>".$row['KELAS']."</td>";
+                        echo "<td>".$hari."</td>";
+                        echo "<td>".$row['WAKTU']."</td>";
+                        echo "<td><a href='$link2'>Hapus</a></td>";
+                        echo '</tr>';
+                    }
+                ?>
+                </table>
+                <form method="get" action="tambah_jadwal.php">
+                    <center><button type="submit">Tambah Jadwal</button></center>
+                </form>
+            </main><!-- .content -->
+		</div><!-- .container-->
+
+		<aside class="right-sidebar">
+            <center><h1>Menu</h1></center>
+            <table>
+                <tr>
+                    <?php
+                        if($level == "dosen")
+                            echo "<td><a href='index_dosen.php'>Home</a></td>";
+                        else
+                            echo "<td><a href='index_mahasiswa.php'>Home</a></td>";
+                    ?>
+                </tr>
+                <tr>
+                    <td><a href="profile_dosen.php?id_user=<?php echo $user_id;?>">Profile</a></td>
+                </tr>
+                <tr>
+                    <td><a href="atur_jadwal.php?id_user=<?php echo $user_id;?>">Atur Jadwal Mengajar</a></td>
+                </tr>
+                <tr>
+                    <td><a href="logout.php">Logout</a></td>
+                </tr>
+            </table>
+		</aside><!-- .right-sidebar -->
+
+	</div><!-- .middle-->
+
+	<footer class="footer">
+    Halo Dosen @2018
+	</footer><!-- .footer -->
+
+</div><!-- .wrapper -->
+
+</body>
+</html>
+
+//tambah_jadwal
+<?php
+    include('session.php');
+
+    if(isset($_POST['tbj'])){
+        $matkul = $_POST['matkul'];
+		$hari = $_POST['hari'];
+		$waktu = $_POST['waktu'];
+		$ruang = $_POST['ruang'];
+        $kelas = $_POST['kelas'];
+        $max = sizeof($_POST['matkul']);
+        for($i=0;$i<$max;$i++){
+			if($i==0)
+				$sql = "INSERT INTO jadwal (kd_ruang, kode_mk, nip, waktu, kelas, hari)
+				VALUES ('".$ruang[$i]."','".$matkul[$i]."',(select nip from dosen where id_user = '".$user_id."'),'".$waktu[$i]."','".$kelas[$i]."','".$hari[$i]."');";
+			elseif($i==$max-1)
+				$sql .= "INSERT INTO jadwal (kd_ruang, kode_mk, nip, waktu, kelas, hari)
+				VALUES ('".$ruang[$i]."','".$matkul[$i]."',(select nip from dosen where id_user = '".$user_id."'),'".$waktu[$i]."','".$kelas[$i]."','".$hari[$i]."')";
+			else
+				$sql .= "INSERT INTO jadwal (kd_ruang, kode_mk, nip, waktu, kelas, hari)
+				VALUES ('".$ruang[$i]."','".$matkul[$i]."',(select nip from dosen where id_user = '".$user_id."'),'".$waktu[$i]."','".$kelas[$i]."','".$hari[$i]."');";
+		}
+        if (mysqli_multi_query($db, $sql)) {
+            $info = "Data berhasil ditambahkan";
+        } else {
+            $infoe = "Error inserting record: " . mysqli_error($db);
+        }
+
+    }
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script><![endif]-->
+	<title>Tambah Jadwal</title>
+	<meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="wrapper">
+
+	<header class="header">
+        <h1>Halo Dosen</h1>
+		<h2>Halaman Dosen</h2>
+	</header><!-- .header-->
+    <div class="navi">
+            <h3><?php echo 'Welcome, '.$login_session;?></h3>
+    </div>
+	<div class="middle">
+        
+		<div class="container">
+			<main class="content">
+                <center><h2>Tambah Jadwal</h2></center>
+                <div style="color:green;">
+                    <?php
+                        if(isset($info))
+                            echo $info;
+                    ?>
+                </div>
+                <div style="color:red;">
+                    <?php
+                        if(isset($infoe))
+                            echo $infoe;
+                    ?>
+                </div>
+                <form method="post" action="">
+				<div class="test-container">
+					<div class="test0" id="test0">
+						<select name = "matkul[]" class="matkull">
+						  <?php
+							$sql = "select * from matakuliah";
+							
+							$result = mysqli_query($db,$sql);
+							while($row = mysqli_fetch_array($result)){
+								echo "<option value='".$row["KODE_MK"]."'>".$row["NAMA_MK"]."</option>";
+							}
+							?>
+						</select>
+						<select name = "hari[]" style = "margin-left: 10px;">
+						  <option value="" selected>Pilih Hari</option>
+						  <option value="2">Senin</option>
+						  <option value="3">Selasa</option>
+						  <option value="4">Rabu</option>
+						  <option value="5">Kamis</option>
+						  <option value="6">Jumat</option>
+						</select>
+						<select name = "waktu[]" style = "margin-left: 10px;">
+						  <option value="" selected>Pilih Waktu</option>
+						  <option value="06:50-08:30">06:50-08:30</option>
+						  <option value="06:50-09:20">06:50-09:20</option>
+						  <option value="07:00-08:40">07:00-08:40</option>
+						  <option value="07:00-09:30">07:00-09:30</option>
+						  <option value="08:30-10:10">08:30-10:10</option>
+						  <option value="08:40-10:20">08:40-10:20</option>
+						  <option value="08:30-11:00">08:30-11:00</option>
+						  <option value="08:40-11:10">08:40-11:10</option>
+						  <option value="09:20-11:00">09:20-11:00</option>
+						  <option value="09:20-11:50">09:20-11:50</option>
+						  <option value="09:30-11:10">09:30-11:10</option>
+						  <option value="09:30-12:00">09:30-12:00</option>
+						  <option value="10:20-12:00">10:20-12:00</option>
+						  <option value="12:40-14:20">12:40-14:20</option>
+						  <option value="12:40-15:30">12:40-15:30</option>
+						  <option value="14:20-16:00">14:20-16:00</option>
+						  <option value="15:30-18:00">15:30-18:00</option>
+						</select>
+						<select name = "ruang[]" style = "margin-left: 10px;">
+						  <option value="" selected>Pilih Ruang</option>
+						  <?php
+							$sql = "select * from ruang";
+							
+							$result = mysqli_query($db,$sql);
+							while($row = mysqli_fetch_array($result)){
+								echo "<option value='".$row["KD_RUANG"]."'>".$row["NAMA_RUANG"]."</option>";
+							}?>
+						</select>
+						<select name = "kelas[]" style = "margin-left: 10px;" id="akhir">
+						  <option value="" selected>Pilih Kelas</option>
+						  <option value="A">A</option>
+						  <option value="B">B</option>
+						  <option value="C">C</option>
+						  <option value="D">D</option>
+						  <option value="E">E</option>
+						  <option value="F">F</option>
+						  <option value="G">G</option>
+						  <option value="H">H</option>
+						</select>
+						<button type="button" class="btnRemove">Hapus</button><br><br>
+					</div>
+					<div id="clonedItem"></div>		
+				</div>
+				<button type="button" id="add">Tambah</button>
+                <input type="submit" name="tbj" value="Tambah Jadwal"/>
+                </form>
+            </main><!-- .content -->
+		</div><!-- .container-->
+
+		<aside class="right-sidebar">
+            <center><h1>Menu</h1></center>
+            <table>
+                <tr>
+                    <?php
+                        if($level == "dosen")
+                            echo "<td><a href='index_dosen.php'>Home</a></td>";
+                        else
+                            echo "<td><a href='index_mahasiswa.php'>Home</a></td>";
+                    ?>
+                </tr>
+                <tr>
+                    <td><a href="profile_dosen.php?id_user=<?php echo $user_id;?>">Profile</a></td>
+                </tr>
+                <tr>
+                    <td><a href="atur_jadwal.php?id_user=<?php echo $user_id;?>">Atur Jadwal Mengajar</a></td>
+                </tr>
+                <tr>
+                    <td><a href="logout.php">Logout</a></td>
+                </tr>
+            </table>
+		</aside><!-- .right-sidebar -->
+
+	</div><!-- .middle-->
+
+	<footer class="footer">
+    Halo Dosen @2018
+	</footer><!-- .footer -->
+
+</div><!-- .wrapper -->
+
+</body>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="//code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+	<script src="myjs.js"></script>
+</html>
